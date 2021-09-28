@@ -1,70 +1,116 @@
 const fs = require('fs');
 const path = require('path');
 
-function pluginLodashImport(options = {}) {
+const destructuredImportRegex = RegExp(/\{\s?(((\w+),?\s?)+)\}/, 'g');
+const namespacedImportRegex = RegExp(/(?:\*\sas\s?(.*)\sfrom\s?['"])/, 'g');
+
+function pluginRamdaImport(options = {}) {
   const { filter = /.*/ } = options;
 
   return {
-    name: 'lodash',
+    name: 'ramda',
     setup(build) {
-      build.onLoad({ filter }, async args => {
+      build.onLoad({ filter }, async (args) => {
         const contents = await fs.promises.readFile(args.path, 'utf8');
         const extension = path.extname(args.path).replace('.', '');
         const loader = extension === 'js' ? 'jsx' : extension;
 
-        const lodashImportRegex = /import\s+?(?:(?:(?:[\w*\s{},]*)\s+from\s+?)|)(?:(?:'lodash\/?.*?'))[\s]*?(?:;|$|)/g;
+        const ramdaImportRegex =
+          /import\s+?(?:(?:(?:[\w*\s{},]*)\s+from\s+?)|)[\'\"](?:(?:ramda\/?.*?))[\'\"][\s]*?(?:;|$|)/g;
 
-        const lodashImports = contents.match(lodashImportRegex);
-
-        if (!lodashImports) {
+        const ramdaImports = contents.match(ramdaImportRegex);
+        if (!ramdaImports) {
           return {
             loader,
-            contents
+            contents,
           };
         }
 
-        const destructuredImportRegex = /\{\s?(((\w+),?\s?)+)\}/g;
+        const importNames = new Set();
         let finalContents = contents;
 
-        lodashImports.forEach(line => {
-          // Capture content inside curly braces within imports
+        ramdaImports.forEach((line) => {
+          // Capture content inside curly braces within imports, eg:
+          // import { noop } from 'ramda'
+          // = "noop"
           const destructuredImports = line.match(destructuredImportRegex);
-
-          // For example:
-          // import noop from 'lodash/noop';
-          if (!destructuredImports) {
-            return;
+          if (destructuredImports) {
+            // import { noop, isEmpty, debounce as _debounce } from 'ramda'
+            // = ["noop", "isEmpty", "debounce as _debounce"]
+            destructuredImports[0]
+              .replace(/[{}]/g, '')
+              .trim()
+              .split(', ')
+              .map((str) => importNames.add(str));
           }
 
-          // For example:
-          // import { noop, isEmpty, debounce as _debounce } from 'lodash';
-          const importName = destructuredImports[0]
-            .replace(/[{}]/g, '')
-            .trim()
-            .split(', ');
+          // Capture the namespaced import if present, eg:
+          // import * as R from 'ramda'
+          // = "R"
+          const namespacedImportMatch = namespacedImportRegex.exec(line);
+          if (namespacedImportMatch) {
+            const [, namespacedImportVariable] = namespacedImportMatch;
 
-          let result = '';
-
-          importName.forEach(name => {
-            const previousResult = `${result ? `${result}\n` : ''}`;
-            if (name.includes(' as ')) {
-              const [realName, alias] = name.split(' as ');
-              result = `${previousResult}import ${alias} from 'lodash/${realName}';`;
-            } else {
-              result = `${previousResult}import ${name} from 'lodash/${name}';`;
+            if (!namespacedImportVariable) {
+              throw new Error(
+                'Something went wrong when extracting the namespaced import variable name',
+                line
+              );
             }
-          });
 
-          finalContents = contents.replace(line, result);
+            if (namespacedImportVariable) {
+              // construct a regexp to detect function calls of fields in namespace, eg:
+              // R.add(1, 2)
+              // = "add"
+              const namespaceVariableRegex = new RegExp(
+                `\\b${namespacedImportVariable}\\.(.*)\\(`,
+                'g'
+              );
+
+              // string.replaceAll is not available until node 15 :(
+              for (let [, field] of contents.matchAll(namespaceVariableRegex)) {
+                console.log('extracting field ', field);
+
+                // extract field name, eg:
+                // R.add()
+                // = "add"
+                importNames.add(field);
+              }
+
+              // replace usage, eg:
+              // R.add()
+              // = add()
+              finalContents = finalContents.replace(
+                namespaceVariableRegex,
+                '$1('
+              );
+            }
+          }
+
+          if (importNames.size > 0) {
+            let result = '';
+
+            importNames.forEach((name) => {
+              const previousResult = `${result ? `${result}\n` : ''}`;
+              if (name.includes(' as ')) {
+                const [realName, alias] = name.split(' as ');
+                result = `${previousResult}import ${alias} from 'ramda/src/${realName}';`;
+              } else {
+                result = `${previousResult}import ${name} from 'ramda/src/${name}';`;
+              }
+            });
+
+            finalContents = finalContents.replace(line, result);
+          }
         });
 
         return {
           loader,
-          contents: finalContents
+          contents: finalContents,
         };
       });
     },
   };
 }
 
-module.exports = pluginLodashImport;
+module.exports = pluginRamdaImport;

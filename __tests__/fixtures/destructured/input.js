@@ -1,13 +1,11 @@
-import { isEmpty, chunk, last } from 'lodash';
+import { isEmpty, last } from 'ramda';
 
 const empty = {};
 const notEmpty = {
   a: 1,
 };
 
-isEmpty(obj);
+isEmpty(empty);
 isEmpty(notEmpty);
-
-chunk(['a', 'b', 'c', 'd'], 2);
 
 last(['a', 'b']);

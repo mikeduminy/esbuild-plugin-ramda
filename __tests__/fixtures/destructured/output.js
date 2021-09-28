@@ -1,11 +1,9 @@
-import isEmpty from "lodash/isEmpty";
-import chunk from "lodash/chunk";
-import last from "lodash/last";
+import isEmpty from "ramda/src/isEmpty";
+import last from "ramda/src/last";
 const empty = {};
 const notEmpty = {
   a: 1
 };
-isEmpty(obj);
+isEmpty(empty);
 isEmpty(notEmpty);
-chunk(["a", "b", "c", "d"], 2);
 last(["a", "b"]);

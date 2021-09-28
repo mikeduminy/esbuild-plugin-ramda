@@ -1,11 +1,11 @@
-import { isEmpty as checkIsEmpty, chunk } from 'lodash';
+import { isEmpty as checkIsEmpty, add } from 'ramda';
 
 const empty = {};
 const notEmpty = {
   a: 1,
 };
 
-checkIsEmpty(obj);
+checkIsEmpty(empty);
 checkIsEmpty(notEmpty);
 
-chunk(['a', 'b', 'c', 'd'], 2);
+add(1, 2);

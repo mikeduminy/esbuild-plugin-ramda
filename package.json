@@ -1,14 +1,14 @@
 {
-  "name": "esbuild-plugin-lodash",
-  "version": "1.0.4",
-  "description": "Similar babel-plugin-lodash for esbuild",
-  "author": "Joshua Stephen (https://github.com/josteph)",
-  "homepage": "https://github.com/josteph/esbuild-plugin-lodash",
+  "name": "esbuild-plugin-ramda",
+  "version": "1.0.0",
+  "description": "Similar babel-plugin-ramda for esbuild",
+  "author": "Mike Duminy (https://github.com/mikeduminy)",
+  "homepage": "https://github.com/mikeduminy/esbuild-plugin-ramda",
   "main": "index.js",
   "keywords": [
     "esbuild",
     "esbuild-plugin",
-    "lodash"
+    "ramda"
   ],
   "files": [
     "index.js"
@@ -19,17 +19,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/josteph/esbuild-plugin-lodash.git"
+    "url": "git+https://github.com/mikeduminy/esbuild-plugin-ramda.git"
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/josteph/esbuild-plugin-lodash/issues"
+    "url": "https://github.com/mikeduminy/esbuild-plugin-ramda/issues"
   },
   "devDependencies": {
-    "@release-it/conventional-changelog": "^2.0.1",
-    "esbuild": "^0.11.22",
-    "jest": "^26.1.0",
-    "release-it": "*"
+    "@release-it/conventional-changelog": "3.3.0",
+    "esbuild": "~0.13.3",
+    "jest": "27.2.3",
+    "release-it": "14.11.6"
   },
   "publishConfig": {
     "access": "public"

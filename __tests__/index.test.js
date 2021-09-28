@@ -4,18 +4,22 @@ const fs = require('fs');
 
 const esbuild = require('esbuild');
 
-const lodashPlugin = require('..');
+const ramdaPlugin = require('..');
 
-const resolvePath = file => path.resolve(__dirname, file);
+const resolvePath = (file) => path.resolve(__dirname, file);
 
-describe('Lodash plugin tests', () => {
+describe('Ramda plugin tests', () => {
   it('should use named import when transformed', async () => {
-    const output = fs.readFileSync(resolvePath('fixtures/alias/output.js'), 'utf-8');
+    const output = fs.readFileSync(
+      resolvePath('fixtures/alias/output.js'),
+      'utf-8'
+    );
 
     const res = await esbuild.build({
       entryPoints: [resolvePath('fixtures/alias/input.js')],
       bundle: false,
-      plugins: [lodashPlugin()],
+      format: 'esm',
+      plugins: [ramdaPlugin()],
       write: false,
     });
 
@@ -23,12 +27,31 @@ describe('Lodash plugin tests', () => {
   });
 
   it('should handle destructured import transformation', async () => {
-    const output = fs.readFileSync(resolvePath('fixtures/destructured/output.js'), 'utf-8');
+    const output = fs.readFileSync(
+      resolvePath('fixtures/destructured/output.js'),
+      'utf-8'
+    );
 
     const res = await esbuild.build({
       entryPoints: [resolvePath('fixtures/destructured/input.js')],
       bundle: false,
-      plugins: [lodashPlugin()],
+      plugins: [ramdaPlugin()],
+      write: false,
+    });
+
+    expect(res.outputFiles[0].text).toStrictEqual(output);
+  });
+
+  it('should handle namespaced import transformation', async () => {
+    const output = fs.readFileSync(
+      resolvePath('fixtures/namespaced/output.js'),
+      'utf-8'
+    );
+
+    const res = await esbuild.build({
+      entryPoints: [resolvePath('fixtures/namespaced/input.js')],
+      bundle: false,
+      plugins: [ramdaPlugin()],
       write: false,
     });
 

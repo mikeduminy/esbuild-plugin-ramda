@@ -1,38 +1,27 @@
-# esbuild-plugin-lodash
+# esbuild-plugin-ramda
 
-[![npm](https://img.shields.io/npm/v/esbuild-plugin-lodash.svg)](https://www.npmjs.com/package/esbuild-plugin-lodash)
+[![npm](https://img.shields.io/npm/v/esbuild-plugin-ramda.svg)](https://www.npmjs.com/package/esbuild-plugin-ramda)
 
-This plugin is for [esbuild](https://github.com/evanw/esbuild), similar to how [babel-plugin-lodash](https://github.com/lodash/babel-plugin-lodash) works for babel.
-
-
-## Thoughts
-
-The non-es `lodash` package is not tree-shakeable, this plugin is only for direct import workaround. 
-
-For better coding practices, you can use instead `lodash-es` directly or strictly import the required lodash function manually.
-
+This plugin is for [esbuild](https://github.com/evanw/esbuild), similar to how [babel-plugin-ramda](https://github.com/megawac/babel-plugin-ramda) works for babel.
 
 ## Installation
 
 ```sh
-npm install --save-dev esbuild-plugin-lodash
+npm install --save-dev esbuild-plugin-ramda
 ```
-
 
 ## Usage
 
 Define plugin in the `plugins` section of esbuild config like this:
 
 ```js
-const esbuild = require('esbuild');
-const lodashTransformer = require('esbuild-plugin-lodash');
+const esbuild = require("esbuild");
+const ramdaTransformer = require("esbuild-plugin-ramda");
 
 esbuild.build({
   // ...
-  plugins: [
-    lodashTransformer(),
-  ],
-})
+  plugins: [ramdaTransformer()],
+});
 ```
 
 ## Result
@@ -40,24 +29,20 @@ esbuild.build({
 Having this input file:
 
 ```js
-import { get, isEmpty }  from 'lodash';
+import { add, curry } from "ramda";
 
-const something = {};
-
-get(something);
-isEmpty(something);
+add(2, 3);
+curry(add)(2)(3);
 ```
 
 It will output this following file content:
 
 ```js
-import get  from 'lodash/get';
-import isEmpty  from 'lodash/isEmpty';
+import add from "ramda/src/add";
+import curry from "ramda/src/curry";
 
-const something = {};
-
-get(something);
-isEmpty(something);
+add(2, 3);
+curry(add)(2)(3);
 ```
 
 ## Options
