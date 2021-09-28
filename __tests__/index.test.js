@@ -51,7 +51,7 @@ describe('Ramda plugin tests', () => {
     const res = await esbuild.build({
       entryPoints: [resolvePath('fixtures/namespaced/input.js')],
       bundle: false,
-      plugins: [ramdaPlugin()],
+      plugins: [ramdaPlugin({ experimentalNamespaceHandling: true })],
       write: false,
     });
 

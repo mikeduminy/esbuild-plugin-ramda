@@ -47,4 +47,16 @@ curry(add)(2)(3);
 
 ## Options
 
-You can specify your own `filter` as per according to esbuild docs [here](https://esbuild.github.io/plugins/#concepts).
+- `filter` (default: `/.*/`)
+  - You can specify your own `filter` as per according to esbuild docs [here](https://esbuild.github.io/plugins/#concepts).
+
+- `experimentalNamespaceHandling` (default: `false`)
+  - When true the plugin will attempt to transform namespaced imports **and** the usages thereof. For example, given the following input the output should match the example above.
+  
+  ```js
+  import * as R from "ramda";
+
+  R.add(2, 3);
+  R.curry(add)(2)(3);
+  ```
+

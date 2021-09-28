@@ -5,7 +5,7 @@ const destructuredImportRegex = RegExp(/\{\s?(((\w+),?\s?)+)\}/, 'g');
 const namespacedImportRegex = RegExp(/(?:\*\sas\s?(.*)\sfrom\s?['"])/, 'g');
 
 function pluginRamdaImport(options = {}) {
-  const { filter = /.*/ } = options;
+  const { filter = /.*/, experimentalNamespaceHandling = false } = options;
 
   return {
     name: 'ramda',
@@ -44,47 +44,14 @@ function pluginRamdaImport(options = {}) {
               .map((str) => importNames.add(str));
           }
 
-          // Capture the namespaced import if present, eg:
-          // import * as R from 'ramda'
-          // = "R"
-          const namespacedImportMatch = namespacedImportRegex.exec(line);
-          if (namespacedImportMatch) {
-            const [, namespacedImportVariable] = namespacedImportMatch;
-
-            if (!namespacedImportVariable) {
-              throw new Error(
-                'Something went wrong when extracting the namespaced import variable name',
-                line
-              );
-            }
-
-            if (namespacedImportVariable) {
-              // construct a regexp to detect function calls of fields in namespace, eg:
-              // R.add(1, 2)
-              // = "add"
-              const namespaceVariableRegex = new RegExp(
-                `\\b${namespacedImportVariable}\\.(.*)\\(`,
-                'g'
-              );
-
-              // string.replaceAll is not available until node 15 :(
-              for (let [, field] of contents.matchAll(namespaceVariableRegex)) {
-                console.log('extracting field ', field);
-
-                // extract field name, eg:
-                // R.add()
-                // = "add"
-                importNames.add(field);
-              }
-
-              // replace usage, eg:
-              // R.add()
-              // = add()
-              finalContents = finalContents.replace(
-                namespaceVariableRegex,
-                '$1('
-              );
-            }
+          if (experimentalNamespaceHandling) {
+            const {
+              imports,
+              contents,
+            } = findAndUpdateNamespacedImportUsages(line, finalContents)
+            
+            imports.forEach((nsImport) => importNames.add(nsImport))
+            finalContents = contents
           }
 
           if (importNames.size > 0) {
@@ -110,6 +77,53 @@ function pluginRamdaImport(options = {}) {
         };
       });
     },
+  };
+}
+
+function findAndUpdateNamespacedImportUsages(line, contents) {
+  const imports = new Set()
+
+  // Capture the namespaced import if present, eg:
+  // import * as R from 'ramda'
+  // = "R"
+  const namespacedImportMatch = namespacedImportRegex.exec(line);
+  if (namespacedImportMatch) {
+    const [, namespacedImportVariable] = namespacedImportMatch;
+
+    if (!namespacedImportVariable) {
+      throw new Error(
+        'Something went wrong when extracting the namespaced import variable name',
+        line
+      );
+    }
+
+    if (namespacedImportVariable) {
+      // construct a regexp to detect function calls of fields in namespace, eg:
+      // R.add(1, 2)
+      // = "add"
+      const namespaceVariableRegex = new RegExp(
+        `\\b${namespacedImportVariable}\\.(.*)\\(`,
+        'g'
+      );
+
+      // string.replaceAll is not available until node 15 :(
+      for (let [, field] of contents.matchAll(namespaceVariableRegex)) {
+        // extract field name, eg:
+        // R.add()
+        // = "add"
+        imports.add(field);
+      }
+
+      // replace usage, eg:
+      // R.add()
+      // = add()
+      contents = contents.replace(namespaceVariableRegex, '$1(');
+    }
+  }
+
+  return {
+    imports,
+    contents,
   };
 }
 
